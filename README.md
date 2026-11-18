@@ -4,7 +4,8 @@ Interface web qui pilote les caméras et magnétoscopes DV en FireWire. Elle cap
 
 ## En images
 
-**La façade** : l'écran DIRECT montre ce que lit la platine, avec son timecode ; l'écran CAPTURES rejoue les vidéos déjà faites. Les touches pilotent la bande en FireWire (AV/C), REC lance la capture.
+* **La façade** : l'écran DIRECT montre ce que lit la platine, avec son timecode ; l'écran CAPTURES rejoue les vidéos déjà faites. Les touches pilotent la bande en FireWire (AV/C), REC lance la capture.
+* Lors des captures, ne vous fiez pas au décalage du son : il est là juste pour information. Quand vous relirez une capture, le son sera synchronisé et parfait.
 
 ![Façade d'UbiCam](images/facade.png)
 
