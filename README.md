@@ -44,7 +44,7 @@ tar xzf UbiCam.tar.gz && IP=192.168.xxx.xxx/24 PASSERELLE=192.168.xxx.xxx UbiCam
 
 Remplacer avant tout les `192.168.xxx.xxx` par les adresses de votre réseau : l'IP du conteneur et la passerelle ci-dessus, l'adresse du NAS dans `systeme/fstab.extrait` et celle d'UbiVox dans `systeme/ubivox.env.exemple`.
 
-Compléter ensuite `/etc/dvgrab-web/nas.cred` et `/etc/dvgrab-web/ubivox.env` dans le conteneur, en droits 600. Les valeurs sont dans `~/.secrets/infra.env` et le `.env` d'UbiHome ; ne jamais les recopier ici. Redémarrer ensuite `dvweb`.
+Compléter ensuite `/etc/dvgrab-web/nas.cred` dans le conteneur, en droits 600. Redémarrer ensuite `dvweb`.
 
 ## Mettre à jour l'appli seulement
 
