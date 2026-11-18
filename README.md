@@ -70,7 +70,11 @@ UbiCam est libre et gratuit. Si l'appli vous a permis de sauver vos bandes DV, v
 
 **[Faire une contribution PayPal](https://paypal.me/lcnetwork)**
 
-À quoi sert la contribution : acheter le matériel qui permet de tester UbiCam avec d'autres lecteurs (caméscopes, platines DV / DVCAM / Digital8) et les câbles FireWire qui vont avec. Chaque appareil a ses particularités sur le bus (sortie à ouvrir, commandes refusées, fin de bande mal signalée) : on ne peut les corriger qu'en ayant l'appareil sous la main.
+À quoi sert la contribution :
+
+* M'acheter du café pour les longues soirées à faire des tests, la retraite ne fait pas tout.
+
+* Acheter le matériel qui permet de tester UbiCam avec d'autres lecteurs (caméscopes, platines DV / DVCAM / Digital8) et les câbles FireWire qui vont avec. Chaque appareil a ses particularités sur le bus (sortie à ouvrir, commandes refusées, fin de bande mal signalée) : on ne peut les corriger qu'en ayant l'appareil sous la main.
 
 Deux exemples de câbles IEEE 1394 (FireWire / i.LINK) utiles pour ces essais :
 
