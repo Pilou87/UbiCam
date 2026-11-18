@@ -1,0 +1,11 @@
+[Unit]
+Description=Interface web de capture DV
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/dvgrab-web/ubivox.env
+ExecStart=/usr/bin/python3 /opt/dvgrab-web/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

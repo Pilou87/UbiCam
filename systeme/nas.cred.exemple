@@ -1,0 +1,3 @@
+# Identifiants du partage DV-CAM du NAS : à copier en /etc/dvgrab-web/nas.cred (droits 600)
+username=a_remplir
+password=a_remplir

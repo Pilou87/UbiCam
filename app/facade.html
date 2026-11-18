@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UBI-CAM</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dseg@0.46.0/css/dseg.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<style>
+/* Couleurs de la façade : gris chaud des platines DVCAM, vitre fumée, afficheur bleu */
+:root{
+  --piece:#15171b; --piece-2:#0d0e11;
+  --facade-haut:#e4e0d5; --facade-bas:#cdc8ba; --facade-ombre:#a9a394; --facade-trait:#f6f3ea;
+  --gravure:#4d4a42; --gravure-pale:#7a766b;
+  --vitre:#0b0809; --vitre-reflet:rgba(255,80,60,.06);
+  --vfd:#7fd8ff; --vfd-halo:rgba(90,200,255,.55); --vfd-eteint:rgba(127,216,255,.08);
+  --rec:#d92b2b; --rec-vif:#ff4a3d; --stop:#2c67c7;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% 0%,#23262c 0%,var(--piece) 45%,var(--piece-2) 100%);
+  font-family:Inter,system-ui,sans-serif;color:#ddd}
+body{padding:28px 16px 40px}
+.platine{max-width:1600px;margin:0 auto;border-radius:10px;padding:18px 22px 22px;
+  background:linear-gradient(180deg,var(--facade-haut) 0%,var(--facade-bas) 100%);
+  box-shadow:0 1px 0 var(--facade-trait) inset,0 -2px 0 var(--facade-ombre) inset,0 30px 60px rgba(0,0,0,.6),0 4px 10px rgba(0,0,0,.4);
+  position:relative}
+/* grain très léger du métal peint */
+.platine:before{content:"";position:absolute;inset:0;border-radius:10px;pointer-events:none;opacity:.35;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px)}
+.entete{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;position:relative}
+.marque{font-weight:700;letter-spacing:.32em;color:var(--gravure);font-size:15px}
+.modele{font-size:11px;letter-spacing:.14em;color:var(--gravure);text-transform:uppercase}
+.modele b{font-size:14px;letter-spacing:.04em;margin-left:6px}
+.badge-dv{border:2px solid var(--gravure);border-radius:3px;padding:1px 8px;font-style:italic;font-weight:700;font-size:20px;
+  color:#3a3221;background:linear-gradient(180deg,#e8d9a8,#c9b67a);letter-spacing:.06em}
+.liens a{color:var(--gravure-pale);font-size:11px;text-decoration:none;letter-spacing:.08em;text-transform:uppercase;margin-left:12px}
+.liens a:hover{color:var(--gravure)}
+/* signature gravée au bas de la façade */
+.signature{text-align:center;margin-top:10px;font-size:11px;letter-spacing:.08em;color:var(--gravure-pale)}
+
+/* Fente d'insertion avec la cassette et son étiquette */
+.fente{position:relative;margin:0 auto 16px;max-width:900px;height:74px;border-radius:8px;
+  background:linear-gradient(180deg,#bdb7a8,#d7d2c5);box-shadow:0 2px 3px rgba(0,0,0,.25) inset,0 1px 0 var(--facade-trait)}
+.fente-trou{position:absolute;left:28px;right:28px;top:14px;height:46px;border-radius:4px;background:#121214;
+  box-shadow:0 6px 10px rgba(0,0,0,.8) inset;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.cassette{height:34px;width:78%;border-radius:3px;background:linear-gradient(180deg,#2b2d31,#1b1c1f);
+  display:flex;align-items:center;gap:10px;padding:0 10px;transform:none;transition:transform .5s ease}
+.fente.vide .cassette{transform:translateY(60px)}
+.etiquette{flex:1;height:22px;border-radius:2px;background:linear-gradient(180deg,#fbfaf6,#e9e6dc);display:flex;align-items:center;
+  overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,.4)}
+.etiquette .bandeau{height:100%;padding:0 8px;display:flex;align-items:center;background:var(--rec);color:#fff;font-weight:700;
+  font-size:10px;letter-spacing:.14em}
+.etiquette label{font-size:10px;letter-spacing:.12em;color:#6c675c;padding:0 4px 0 10px;text-transform:uppercase}
+.etiquette input{flex:1;min-width:0;border:0;background:transparent;font:600 16px/1 Inter,sans-serif;color:#1d1b17;outline:0;
+  font-family:"Permanent Marker",Inter,sans-serif;letter-spacing:.02em}
+.etiquette input:disabled{color:#1d1b17;-webkit-text-fill-color:#1d1b17}
+.fenetre-bobine{width:30px;height:16px;border-radius:8px;background:#0b0b0c;box-shadow:0 0 0 2px #3a3c40 inset}
+.option-rembobiner{position:absolute;right:34px;bottom:-22px;font-size:10px;color:var(--gravure-pale);letter-spacing:.08em;
+  text-transform:uppercase;display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.option-rembobiner input{accent-color:var(--rec)}
+
+/* Vitre de l'afficheur, partagée en deux */
+.vitre{border-radius:8px;padding:12px;background:linear-gradient(180deg,#1a1213,var(--vitre));
+  box-shadow:0 0 0 3px #b5af9f,0 0 0 4px #8f8a7d,0 10px 24px rgba(0,0,0,.6) inset;position:relative;margin-top:32px}
+.vitre:after{content:"";position:absolute;inset:0;border-radius:8px;pointer-events:none;
+  background:linear-gradient(115deg,var(--vitre-reflet) 0%,transparent 35%,transparent 70%,rgba(255,255,255,.03) 100%)}
+.ecrans{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ecran{background:#050505;border-radius:5px;overflow:hidden;display:flex;flex-direction:column;min-width:0;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04)}
+.ecran-titre{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:#8a6f6a;border-bottom:1px solid rgba(255,255,255,.04)}
+.ecran-titre .droite{letter-spacing:.06em;color:#a08a84;text-transform:none;font-size:11px;max-width:65%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.image{position:relative;aspect-ratio:4/3;background:#000;display:flex;align-items:center;justify-content:center}
+.image img,.image video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.repos{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  color:#5c4c48;font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:20px}
+.repos i{font-size:34px;color:#3a302e}
+
+/* Témoins posés sur l'image */
+.temoin{position:absolute;top:10px;left:10px;font:600 11px/1 Inter;letter-spacing:.14em;padding:5px 8px;border-radius:3px;
+  background:rgba(0,0,0,.55);color:#cfd6da;backdrop-filter:blur(2px)}
+.temoin.rec{color:#fff;background:rgba(217,43,43,.85)}
+.temoin.rec:before{content:"● ";animation:clignote 1s steps(2,start) infinite}
+.date-pdv{position:absolute;top:10px;right:10px;font:500 11px/1.3 Inter;color:#e9edf0;background:rgba(0,0,0,.55);padding:5px 8px;
+  border-radius:3px;text-align:right}
+@keyframes clignote{to{visibility:hidden}}
+
+/* Timecode façon afficheur fluorescent bleu de magnétoscope pro */
+.vfd{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);padding:6px 12px 5px;border-radius:4px;
+  background:linear-gradient(180deg,rgba(4,14,22,.88),rgba(2,8,14,.92));box-shadow:0 0 0 1px rgba(127,216,255,.18),0 4px 14px rgba(0,0,0,.6);
+  display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.vfd .sigle{font:700 9px/1 Inter;letter-spacing:.18em;color:var(--vfd);opacity:.75;align-self:center}
+.vfd .chiffres{position:relative;font-family:"DSEG7-Classic",monospace;font-size:24px;letter-spacing:.04em}
+.vfd .fantome{color:var(--vfd-eteint)}
+.vfd .allume{position:absolute;left:0;top:0;color:var(--vfd);text-shadow:0 0 4px var(--vfd-halo),0 0 12px var(--vfd-halo)}
+@media (max-width:860px){.vfd .chiffres{font-size:18px}}
+@media (max-width:560px){.vfd{padding:4px 6px;gap:4px;bottom:6px}.vfd .chiffres{font-size:11px}.vfd .sigle{display:none}
+  .ecrans{gap:6px}.vitre{padding:6px}.temoin,.date-pdv{font-size:9px;top:5px}.temoin{left:5px}.date-pdv{right:5px}
+  .ecran-titre .droite{display:none}.repos{font-size:9px;padding:6px}.repos i{font-size:22px}
+  .capture{padding:6px}.capture .jour{font-size:10px}.capture .titre{font-size:11px}}
+
+.ecran-pied{padding:8px 10px 10px;font-size:12px;color:#b9a9a4;display:flex;flex-direction:column;gap:6px;min-height:52px}
+.ecran-pied .ligne{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ecran-pied .fichier{color:#e6dcd8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ecran-pied .message{color:#ffb37a}
+.reglette{width:100%;accent-color:var(--vfd)}
+/* Image sous le curseur pendant qu'on fait glisser la réglette */
+.image img.vignette{position:absolute;inset:0;display:none}
+.bouton-ranger{border:1px solid rgba(127,216,255,.25);background:rgba(127,216,255,.06);color:var(--vfd);
+  font:600 10px/1 Inter;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;border-radius:3px;cursor:pointer}
+.bouton-ranger:hover{background:rgba(127,216,255,.14)}
+.action.supprimer:hover{color:#ff7b70}
+
+/* Liste des captures dans la moitié droite */
+/* La liste s'ouvre par-dessus l'écran de droite, à la demande (touche LISTE) */
+.captures{position:absolute;inset:0;z-index:3;overflow:auto;background:rgba(6,5,5,.94);backdrop-filter:blur(3px);
+  opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .2s,transform .2s,visibility .2s}
+.captures.ouverte{opacity:1;visibility:visible;transform:none}
+.captures-entete{position:sticky;top:0;z-index:1;padding:6px 10px;align-items:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:#8a6f6a;background:rgba(6,5,5,.98);border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between}
+.captures-entete .action{font-size:13px}
+.touche.allumee button{box-shadow:0 0 0 2px #a19b8c,0 0 0 #8d887a,0 0 14px rgba(127,216,255,.6);transform:translateY(3px)}
+.touche.allumee span{color:#2c67c7}
+.captures::-webkit-scrollbar{width:8px}.captures::-webkit-scrollbar-thumb{background:#2a2222;border-radius:4px}
+.capture{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.035)}
+.capture:hover{background:rgba(127,216,255,.05)}
+.capture.choisie{background:rgba(127,216,255,.1);box-shadow:2px 0 0 var(--vfd) inset}
+.capture .jour{font-family:"DSEG7-Classic",monospace;font-size:13px;color:var(--vfd);opacity:.9}
+.capture .libelle{min-width:0}
+.capture .titre{color:#eee;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.capture .detail{color:#8d7f7b;font-size:11px;margin-top:2px}
+.capture .formats{display:flex;gap:4px;align-items:center}
+.puce{font:700 9px/1 Inter;letter-spacing:.08em;padding:3px 5px;border-radius:2px;background:#2a2627;color:#bbb}
+.puce.mov{background:#16384a;color:var(--vfd)}
+.puce.enc{background:#4a1616;color:#ff9b93}
+.action{background:none;border:0;color:#8d7f7b;font-size:15px;padding:2px 4px;cursor:pointer}
+.action:hover{color:#fff}
+.vide-liste{padding:18px;color:#6b5c58;font-size:12px;text-align:center}
+
+/* Touches de transport, comme sur la façade */
+.transport{display:flex;align-items:flex-end;justify-content:center;gap:18px;margin-top:18px;flex-wrap:wrap}
+.touche{display:flex;flex-direction:column;align-items:center;gap:6px}
+.touche span{font-size:10px;font-weight:600;letter-spacing:.14em;color:var(--gravure)}
+.touche button{width:66px;height:48px;border-radius:5px;border:0;cursor:pointer;font-size:20px;color:#2a2a2a;
+  background:linear-gradient(180deg,#ffffff,#e3e0d8);box-shadow:0 0 0 2px #a19b8c,0 3px 0 #8d887a,0 5px 8px rgba(0,0,0,.25);
+  transition:transform .06s,box-shadow .06s}
+.touche button:active,.touche button.enfonce{transform:translateY(3px);box-shadow:0 0 0 2px #a19b8c,0 0 0 #8d887a,0 2px 3px rgba(0,0,0,.25)}
+.touche button:disabled{opacity:.5;cursor:default}
+.touche.stop button{color:#fff;background:linear-gradient(180deg,#4f86e0,var(--stop))}
+.touche.rec button{width:82px;height:56px;color:#fff;font-size:24px;background:linear-gradient(180deg,#f0574d,var(--rec));
+  box-shadow:0 0 0 2px #8a2a22,0 3px 0 #6f1f19,0 5px 10px rgba(0,0,0,.3)}
+.touche.rec.allumee button{background:linear-gradient(180deg,var(--rec-vif),#e0251c);
+  box-shadow:0 0 0 2px #8a2a22,0 3px 0 #6f1f19,0 0 22px rgba(255,74,61,.75)}
+.touche.rec.allumee button i{animation:clignote 1s steps(2,start) infinite}
+.touche.rec span{color:#8a2a22}
+.separateur{width:1px;height:48px;background:linear-gradient(180deg,transparent,#a9a394,transparent);margin:0 4px}
+.touche.petite button{width:48px;height:36px;font-size:16px}
+
+/* Téléphone : on garde l'essentiel de la façade */
+@media (max-width:560px){
+  body{padding:12px 8px 24px}
+  .platine{padding:12px}
+  .entete .modele{display:none}
+  .fente-trou{left:10px;right:10px}
+  .cassette{width:100%}
+  .fenetre-bobine{display:none}
+  .capture{grid-template-columns:1fr;row-gap:3px}
+  .capture .formats{grid-column:1 / -1;justify-content:flex-end}
+  .transport{gap:8px}
+  .touche button{width:54px;height:44px;font-size:17px}
+  .touche.rec button{width:64px;height:50px}
+  .separateur{display:none}
+}
+.bandeau-message{margin-top:14px;text-align:center;font-size:12px;color:var(--gravure);min-height:16px;letter-spacing:.02em}
+
+/* Fenêtres de la page (renommage, confirmation) */
+.voile{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+.boite{background:#1b1c20;border-radius:8px;padding:18px;width:min(460px,100%);box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.boite h3{margin:0 0 12px;font-size:15px;font-weight:600;color:#eee}
+.boite p{margin:0 0 14px;color:#bbb;font-size:13px;white-space:pre-line}
+.boite input{width:100%;padding:9px 10px;border-radius:5px;border:1px solid #33353b;background:#111214;color:#eee;font:14px Inter}
+.boite .boutons{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.boite button{padding:8px 14px;border-radius:5px;border:0;cursor:pointer;font:600 13px Inter;background:#2b2d33;color:#ddd}
+.boite button.principal{background:var(--stop);color:#fff}
+.boite button.danger{background:var(--rec);color:#fff}
+
+/* Fenêtre des paramètres : les trois emplacements et un explorateur de dossiers */
+.boite.large{width:min(620px,100%)}
+.emplacement{margin-bottom:12px}
+.emplacement label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#9a9aa2;margin-bottom:5px}
+.emplacement .ligne{display:flex;gap:6px}
+.emplacement .ligne input{flex:1;min-width:0}
+.emplacement .ligne button{padding:0 11px;font-size:16px}
+.explorateur{display:none;margin:-4px 0 12px;border:1px solid #33353b;border-radius:5px;background:#111214}
+.explorateur .chemin{padding:7px 10px;font-size:12px;color:#9a9aa2;border-bottom:1px solid #26282d;word-break:break-all}
+.explorateur ul{list-style:none;margin:0;padding:4px 0;max-height:190px;overflow:auto}
+.explorateur li{padding:6px 10px;font-size:13px;color:#ddd;cursor:pointer;display:flex;gap:8px;align-items:center}
+.explorateur li:hover{background:#22242a}
+.explorateur .pied{display:flex;justify-content:flex-end;padding:6px;border-top:1px solid #26282d}
+.boite .erreur{color:#ff8a80;font-size:12px;min-height:16px;margin:0}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap">
+</head>
+<body>
+<div class="platine">
+  <div class="entete">
+    <div class="marque">CAPTURE DV</div>
+    <div class="modele">Digital videocassette recorder<b>IEEE-1394</b></div>
+    <div style="display:flex;align-items:center">
+      <span class="badge-dv">UBI-CAM</span>
+    </div>
+  </div>
+
+  <!-- Fente : la cassette porte le numéro de la bande -->
+  <div id="fente" class="fente">
+    <div class="fente-trou">
+      <div class="cassette">
+        <div class="fenetre-bobine"></div>
+        <div class="etiquette">
+          <div class="bandeau">DV</div>
+          <label for="numero">Bande</label>
+          <input id="numero" inputmode="numeric" autocomplete="off" placeholder="n°" title="Numéro de la bande à capturer">
+        </div>
+        <div class="fenetre-bobine"></div>
+      </div>
+    </div>
+    <label class="option-rembobiner"><input id="rembobiner" type="checkbox"> Rembobiner d'abord</label>
+  </div>
+
+  <div class="vitre">
+    <div class="ecrans">
+      <!-- Moitié gauche : ce qui passe sur la platine -->
+      <section class="ecran">
+        <div class="ecran-titre"><span>Direct</span><span id="etat-bande" class="droite">—</span></div>
+        <div class="image">
+          <img id="apercu" src="/direct" alt="">
+          <div id="sans-image" class="repos" style="display:none"><i class="ti ti-video-off"></i>En attente de la platine</div>
+          <div id="temoin" class="temoin">STOP</div>
+          <div id="date-pdv" class="date-pdv" style="display:none"></div>
+          <div class="vfd"><span class="sigle">TC</span>
+            <span class="chiffres"><span class="fantome">88:88:88:88</span><span id="tc-direct" class="allume">--:--:--:--</span></span></div>
+        </div>
+        <div class="ecran-pied">
+          <div class="ligne"><span id="capture-fichier" class="fichier">Aucune capture en cours</span></div>
+          <div class="ligne"><span id="capture-chiffres"></span><span id="ecouter" class="action" title="Écouter le son du direct"><i class="ti ti-headphones-off"></i></span></div>
+          <div id="message" class="message"></div>
+        </div>
+        <audio id="son" preload="none"></audio>
+      </section>
+
+      <!-- Moitié droite : les captures déjà faites -->
+      <section class="ecran">
+        <div class="ecran-titre"><span>Captures</span><span id="vu-titre" class="droite">Choisis une capture</span></div>
+        <div class="image">
+          <video id="video" playsinline></video>
+          <img id="vignette" class="vignette" alt="">
+          <div id="sans-video" class="repos"><i class="ti ti-movie"></i>Touche LISTE pour revoir une capture</div>
+          <div class="vfd"><span class="sigle">PB</span>
+            <span class="chiffres"><span class="fantome">88:88:88:88</span><span id="tc-lecture" class="allume">00:00:00:00</span></span></div>
+          <div id="captures" class="captures"></div>
+        </div>
+        <div class="ecran-pied">
+          <input id="reglette" class="reglette" type="range" min="0" max="0" step="1" value="0" title="Aller plus loin dans la capture" style="visibility:hidden">
+          <div class="ligne"><span id="vu-detail"></span></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="transport">
+    <div class="touche"><span>REW</span><button class="bande" data-c="rewind" title="Retour rapide"><i class="ti ti-player-track-prev-filled"></i></button></div>
+    <div class="touche"><span>PLAY</span><button class="bande" data-c="play" title="Lecture"><i class="ti ti-player-play-filled"></i></button></div>
+    <div class="touche"><span>PAUSE</span><button class="bande" data-c="pause" title="Pause"><i class="ti ti-player-pause-filled"></i></button></div>
+    <div class="touche"><span>F FWD</span><button class="bande" data-c="ff" title="Avance rapide"><i class="ti ti-player-track-next-filled"></i></button></div>
+    <div class="touche stop"><span>STOP</span><button class="bande" data-c="stop" title="Stop"><i class="ti ti-player-stop-filled"></i></button></div>
+    <div class="separateur"></div>
+    <div id="touche-rec" class="touche rec"><span id="rec-libelle">REC</span><button id="rec" title="Lancer la capture"><i class="ti ti-circle-filled"></i></button></div>
+    <div id="touche-liste" class="touche petite"><span>LISTE</span><button id="bouton-liste" title="Les vidéos déjà capturées"><i class="ti ti-list"></i></button></div>
+    <div class="touche petite"><span>&nbsp;</span><button id="bouton-parametres" title="Emplacements des fichiers"><i class="ti ti-settings"></i></button></div>
+  </div>
+  <div id="bandeau" class="bandeau-message"></div>
+  <div class="signature">Version 1.5 - 2026 - Développement Jean-François CANE</div>
+</div>
+
+<!-- Fenêtres de la page -->
+<div id="confirmation" class="voile"><div class="boite">
+  <h3 id="confirmation-titre"></h3><p id="confirmation-texte"></p>
+  <div class="boutons"><button id="confirmation-non">Annuler</button><button id="confirmation-oui" class="danger">Confirmer</button></div>
+</div></div>
+<div id="renommage" class="voile"><div class="boite">
+  <h3>Renommer la capture</h3><p>Le .dv et son .mov changent de nom ensemble.</p>
+  <input id="renommage-nom">
+  <div class="boutons"><button id="renommage-non">Annuler</button><button id="renommage-oui" class="principal">Renommer</button></div>
+</div></div>
+
+<div id="parametres" class="voile"><div class="boite large">
+  <h3>Emplacements des fichiers</h3>
+  <div class="emplacement"><label for="param-dossier">Stockage des captures</label>
+    <div class="ligne"><input id="param-dossier" data-cle="dossier"><button class="parcourir" data-cible="param-dossier" title="Parcourir"><i class="ti ti-folder-open"></i></button></div></div>
+  <div class="emplacement"><label for="param-dv">Rangement des .dv</label>
+    <div class="ligne"><input id="param-dv" data-cle="dossier_dv"><button class="parcourir" data-cible="param-dv" title="Parcourir"><i class="ti ti-folder-open"></i></button></div></div>
+  <div class="emplacement"><label for="param-mov">Rangement des .mov</label>
+    <div class="ligne"><input id="param-mov" data-cle="dossier_mov"><button class="parcourir" data-cible="param-mov" title="Parcourir"><i class="ti ti-folder-open"></i></button></div></div>
+  <div id="explorateur" class="explorateur"><div id="explorateur-chemin" class="chemin"></div><ul id="explorateur-liste"></ul>
+    <div class="pied"><button id="explorateur-choisir" class="principal">Choisir ce dossier</button></div></div>
+  <p id="param-erreur" class="erreur"></p>
+  <div class="boutons"><button id="param-non">Annuler</button><button id="param-oui" class="principal">Enregistrer</button></div>
+</div></div>
+
+<script>
+// Gabarit des noms : la date de prise de vue remplace {YYYY-MM-DD}, JF met le titre ensuite.
+var GABARIT = '{YYYY-MM-DD} - [Titre] - Bande_';
+var etatCourant = {};
+
+function echapper(t){return $('<i>').text(t).html().replace(/"/g,'&quot;')}
+function taille(o){return o>1e9?(o/1e9).toFixed(2)+' Go':(o/1e6).toFixed(1)+' Mo'}
+function deuxChiffres(n){return String(n).padStart(2,'0')}
+function enTimecode(s){s=Math.max(0,s||0);var i=Math.floor((s%1)*25),t=Math.floor(s);
+  return deuxChiffres(Math.floor(t/3600))+':'+deuxChiffres(Math.floor(t/60)%60)+':'+deuxChiffres(t%60)+':'+deuxChiffres(i)}
+function enDuree(s){var m=Math.floor(s/60);return (m>=60?Math.floor(m/60)+' h '+deuxChiffres(m%60):m)+' min '+deuxChiffres(s%60)+' s'}
+
+// Fenêtre de confirmation de la page (le navigateur intégré bloque confirm()).
+function demander(titre,texte,libelle,siOui){$('#confirmation-titre').text(titre);$('#confirmation-texte').text(texte);
+  $('#confirmation-oui').text(libelle).off('click').on('click',function(){$('#confirmation').hide();siOui()});
+  $('#confirmation').css('display','flex')}
+$('#confirmation-non').click(function(){$('#confirmation').hide()});
+function annoncer(texte){$('#bandeau').text(texte||'')}
+
+// Ce que dit la platine de sa bande, ramené aux touches de la façade.
+function lireTransport(b){b=b||'';var m=b.toLowerCase();
+  if(m.indexOf('play')>=0&&m.indexOf('pause')>=0)return 'PAUSE';
+  if(m.indexOf('play')>=0)return 'PLAY';
+  if(m.indexOf('reverse')>=0||m.indexOf('rewind')>=0)return 'REW';
+  if(m.indexOf('forward')>=0||m.indexOf('fast')>=0)return 'F FWD';
+  if(m.indexOf('record')>=0)return 'REC';
+  if(m.indexOf('stop')>=0)return 'STOP';
+  return b?b.toUpperCase():'—'}
+
+// Numéro de bande lu dans un nom de fichier « … - Bande_103.dv ».
+function numeroBande(nom){var r=/Bande_(\d+)/i.exec(nom||'');return r?r[1]:null}
+
+function suivre(){$.getJSON('/etat',function(e){
+  etatCourant=e;
+  var transport=lireTransport(e.bande);
+  $('#etat-bande').text(e.camescope?e.bande:'platine muette');
+  $('#apercu').toggle(!!e.camescope);$('#sans-image').toggle(!e.camescope);
+  // Un flux MJPEG coupé ne repart pas seul : on le reconnecte.
+  var img=document.getElementById('apercu');
+  if(e.camescope&&img.complete&&img.naturalWidth===0)img.src='/direct?'+Date.now();
+  // En lecture : le timecode de l'image, sinon le compteur de la platine. Hors
+  // lecture (bobinage, arrêt), l'image est figée : seul le compteur dit où on est.
+  var enLecture=/Play|Record/.test(e.bande||'');
+  $('#tc-direct').text((enLecture?(e.timecode||e.position):(e.position||e.timecode))||'--:--:--:--');
+  var enregistre=e.actif&&e.en_lecture;
+  $('#temoin').toggleClass('rec',!!enregistre).text(enregistre?'REC':(e.actif?'PAUSE · '+transport:transport));
+  // Platine muette : la dernière date lue n'a plus de sens.
+  // Bande sans date : pendant la capture, on montre la date du jour donnée au fichier.
+  var dateVue=e.date?echapper(e.date)+(e.heure?'<br>'+echapper(e.heure):''):
+    (e.actif&&e.date_capture?echapper(e.date_capture)+'<br>'+(e.date_du_jour?(e.date_imposee?'date saisie':'date du jour'):'date du fichier'):'');
+  $('#date-pdv').toggle(!!(dateVue&&e.camescope)).html(dateVue);
+  $('#touche-rec').toggleClass('allumee',!!enregistre);
+  $('#rec-libelle').text(e.actif?(e.en_lecture?'FIN':'REPRISE'):'REC');
+  $('#rec').attr('title',e.actif?(e.en_lecture?'Terminer la capture':'Reprendre la capture'):'Lancer la capture');
+  if(e.actif){
+    $('#capture-fichier').text(e.fichier);
+    $('#capture-chiffres').text(enDuree(e.duree)+' · '+taille(e.taille));
+    var n=numeroBande(e.fichier);if(n)$('#numero').val(n);
+  }else{$('#capture-fichier').text('Aucune capture en cours');$('#capture-chiffres').text('')}
+  $('#numero').prop('disabled',!!e.actif);
+  $('#message').text(e.message||'');
+}).fail(function(){$('#etat-bande').text('appli injoignable')})}
+
+// Les captures : un .dv et son .mov ne font qu'une ligne.
+var lecture={nom:null,depuis:0};
+function listerCaptures(){$.getJSON('/fichiers',function(l){
+  var groupes={},ordre=[];
+  l.forEach(function(f){var p=f.nom.lastIndexOf('.'),base=f.nom.slice(0,p),ext=f.nom.slice(p+1).toLowerCase();
+    if(ext!=='dv'&&ext!=='mov')return;
+    if(!groupes[base]){groupes[base]={base:base};ordre.push(base)}groupes[base][ext]=f});
+  var enCours=etatCourant.actif?etatCourant.fichier:null,max=0;
+  var html=ordre.map(function(base){var g=groupes[base],r=/^(\d{4})-(\d\d)-(\d\d)/.exec(base);
+    var reste=base.replace(/^\d{4}-\d\d-\d\d\s*-\s*/,''),n=numeroBande(base);if(n)max=Math.max(max,parseInt(n,10));
+    var fichier=(g.mov||g.dv).nom,capturant=enCours&&g.dv&&g.dv.nom===enCours;
+    return '<div class="capture'+(lecture.nom===fichier?' choisie':'')+'" data-n="'+echapper(fichier)+'">'
+      +'<div class="jour">'+(r?r[3]+'-'+r[2]+'-'+r[1].slice(2):'--')+'</div>'
+      +'<div class="libelle"><div class="titre">'+echapper(reste)+'</div>'
+      +'<div class="detail">'+(g.dv?taille(g.dv.taille):'')+(g.mov?' · mov '+taille(g.mov.taille):'')+'</div></div>'
+      +'<div class="formats">'+(capturant?'<span class="puce enc">EN COURS</span>':'')
+      +(g.dv?'<span class="puce">DV</span>':'')+(g.mov?'<span class="puce mov">MOV</span>':'')
+      +'<button class="action renommer" data-n="'+echapper(fichier)+'" title="Renommer"><i class="ti ti-pencil"></i></button>'
+      +'<button class="action supprimer" data-base="'+echapper(base)+'" data-fichiers="'+echapper([g.dv,g.mov].filter(Boolean).map(function(f){return f.nom}).join('|'))+'"'
+      +' title="Supprimer ce morceau (.dv et .mov)"><i class="ti ti-trash"></i></button>'
+      +'</div></div>'}).join('');
+  // Morceaux encore au nom provisoire : le rangement prévient qu'ils partiront aussi.
+  aRenommer=ordre.filter(function(b){return b.indexOf('[Titre]')>=0}).length;
+  $('#captures').html('<div class="captures-entete"><span>Vidéos capturées · '+ordre.length+'</span><span style="display:flex;gap:8px;align-items:center">'
+    +(ordre.length?'<button id="ranger" class="bouton-ranger" title="Ranger les .dv dans Captures-DV-MASTER et les .mov dans Captures-DV-MOV"><i class="ti ti-folders"></i> Ranger</button>':'')
+    +'<button class="action fermer-liste" title="Fermer la liste"><i class="ti ti-x"></i></button></span></div>'
+    +(html||'<div class="vide-liste">Aucune capture dans le dossier</div>'));
+  // Bande suivante proposée : la plus haute déjà capturée, plus un.
+  if(!$('#numero').val()&&max&&!etatCourant.actif)$('#numero').val(max+1);
+})}
+
+// Revoir une capture : le serveur réencode à la volée, la réglette relance plus loin.
+function lire(depuis){lecture.depuis=depuis;var v=document.getElementById('video');
+  v.src='/voir/'+encodeURIComponent(lecture.nom)+'?depuis='+depuis;v.play().catch(function(){});
+  $('#reglette').val(depuis).css('visibility','visible');$('#sans-video').hide();majTcLecture()}
+// Arrêt complet de la capture revue : image, son, réglette. Sans lui, la vidéo
+// précédente continuait derrière la liste quand on en choisissait une autre.
+function arreterLecture(){var v=document.getElementById('video');v.pause();v.removeAttribute('src');v.load();
+  lecture.nom=null;glisse.actif=glisse.attente=false;glisse.voulu=glisse.montre=null;$('#vignette').hide();
+  $('#reglette').val(0).attr('max',0).css('visibility','hidden');$('#tc-lecture').text('00:00:00:00');
+  $('#sans-video').show();$('#vu-titre').text('Choisis une capture');$('#vu-detail').text('')}
+function majTcLecture(){var v=document.getElementById('video');$('#tc-lecture').text(enTimecode(lecture.depuis+(v.currentTime||0)))}
+// Touche LISTE : ouvre ou ferme la liste par-dessus l'écran de droite.
+function basculerListe(ouvrir){$('#captures').toggleClass('ouverte',ouvrir);$('#touche-liste').toggleClass('allumee',ouvrir);
+  if(ouvrir){if(lecture.nom)arreterLecture();listerCaptures()}}
+$('#bouton-liste').click(function(){basculerListe(!$('#captures').hasClass('ouverte'))});
+$(document).on('click','.fermer-liste',function(ev){ev.stopPropagation();basculerListe(false)});
+$(document).on('click','.capture',function(){lecture.nom=$(this).data('n');basculerListe(false);
+  glisse.attente=false;glisse.voulu=glisse.montre=null;$('#vignette').hide();
+  $('.capture').removeClass('choisie');$(this).addClass('choisie');$('#vu-titre').text(lecture.nom);
+  $('#vu-detail').text($(this).find('.detail').text());
+  $.getJSON('/duree/'+encodeURIComponent(lecture.nom),function(r){$('#reglette').attr('max',r.duree)});lire(0)});
+// Glisser la réglette montre l'image sous le curseur, comme dans le lecteur d'Apple.
+// Une seule image demandée à la fois : à son arrivée, on demande la position la plus récente.
+var glisse={actif:false,attente:false,enCours:false,voulu:null,montre:null};
+function demanderApercu(){if(glisse.enCours||glisse.voulu===null||glisse.voulu===glisse.montre)return;
+  var t=glisse.voulu;glisse.enCours=true;
+  var img=new Image();
+  img.onload=function(){glisse.enCours=false;glisse.montre=t;
+    if(glisse.actif||glisse.attente)$('#vignette').attr('src',img.src).show();demanderApercu()};
+  img.onerror=function(){glisse.enCours=false;glisse.montre=t;demanderApercu()};
+  img.src='/vignette/'+encodeURIComponent(lecture.nom)+'?t='+t}
+$('#reglette').on('input',function(){if(!lecture.nom)return;
+  glisse.actif=true;glisse.voulu=parseInt(this.value,10);
+  $('#tc-lecture').text(enTimecode(glisse.voulu));demanderApercu()});
+$('#reglette').on('change',function(){if(!lecture.nom)return;
+  glisse.actif=false;glisse.attente=true;glisse.voulu=parseInt(this.value,10);demanderApercu();lire(glisse.voulu)});
+// L'aperçu reste affiché jusqu'à ce que la vidéo reparte de la nouvelle position.
+$('#video').on('playing',function(){if(!glisse.actif){glisse.attente=false;$('#vignette').hide();glisse.montre=null}});
+$('#video').on('timeupdate',function(){if(glisse.actif)return;majTcLecture();$('#reglette').val(Math.floor(lecture.depuis+this.currentTime))})
+  .on('click',function(){if(this.paused)this.play();else this.pause()});
+
+// Renommage depuis la liste (le titre [Titre] est présélectionné pour être tapé par-dessus).
+$(document).on('click','.renommer',function(ev){ev.stopPropagation();var n=$(this).data('n'),p=n.lastIndexOf('.'),base=n.slice(0,p);
+  $('#renommage').data('n',n).css('display','flex');var champ=$('#renommage-nom').val(base).focus()[0],i=base.indexOf('[Titre]');
+  if(i>=0)champ.setSelectionRange(i,i+7);else champ.select()});
+$('#renommage-non').click(function(){$('#renommage').hide()});
+$('#renommage-oui').click(function(){$.post('/renommer',{nom:$('#renommage').data('n'),nouveau:$('#renommage-nom').val()},function(){
+  $('#renommage').hide();listerCaptures()}).fail(function(x){annoncer((x.responseJSON&&x.responseJSON.erreur)||'Renommage refusé')})});
+$('#renommage-nom').on('keydown',function(e){if(e.key==='Enter')$('#renommage-oui').click()});
+
+// Suppression d'un morceau qu'on ne garde pas : le .dv et son .mov partent ensemble.
+$(document).on('click','.supprimer',function(ev){ev.stopPropagation();
+  var base=$(this).data('base'),fichiers=String($(this).data('fichiers')).split('|');
+  demander('Supprimer ce morceau ?',base+'\n\n'+fichiers.join('\n')+'\n\nLa suppression est définitive.','Supprimer',function(){
+    var restants=fichiers.length,erreurs=[];
+    fichiers.forEach(function(n){$.post('/supprimer/'+encodeURIComponent(n))
+      .fail(function(x){erreurs.push(n+' : '+((x.responseJSON&&x.responseJSON.erreur)||'refusé'))})
+      .always(function(){if(--restants)return;
+        if(lecture.nom&&fichiers.indexOf(lecture.nom)>=0)arreterLecture();
+        annoncer(erreurs.length?'Suppression incomplète — '+erreurs.join(' ; '):base+' supprimé');listerCaptures()})})})});
+
+// Rangement : les .dv vers Captures-DV-MASTER, les .mov vers Captures-DV-MOV.
+var aRenommer=0;
+$(document).on('click','#ranger',function(ev){ev.stopPropagation();
+  var texte='Les .dv partent dans Captures-DV-MASTER et les .mov dans Captures-DV-MOV.'
+    +(aRenommer?'\n\nAttention : '+aRenommer+' morceau(x) porte(nt) encore « [Titre] » et seront rangés tels quels.':'');
+  demander('Ranger les captures ?',texte,'Ranger',function(){
+  $.post('/ranger',function(r){var m=r.deplaces.length+' fichier(s) rangé(s)';
+    if(r.ignores.length)m+=' — laissés en place (capture ou conversion en cours) : '+r.ignores.join(', ');
+    annoncer(m);listerCaptures();
+    // Homonymes déjà rangés : on montre les noms en _2, _3… pour que JF les repère.
+    if(r.renommes&&r.renommes.length)demander('Noms déjà pris dans les rayons','Rangés sous un nouveau nom :\n\n'+r.renommes.join('\n'),'OK',function(){})})
+   .fail(function(x){annoncer(x.responseJSON?x.responseJSON.erreur:'Rangement impossible')})})});
+
+// Touches de transport.
+$('.bande').click(function(){var b=$(this).addClass('enfonce');setTimeout(function(){b.removeClass('enfonce')},180);
+  $.post('/bande/'+b.data('c'),function(r){annoncer(r.message)}).fail(function(x){annoncer(x.responseJSON?x.responseJSON.erreur:'Commande refusée')})});
+
+// REC : lance la capture, la reprend si elle est en pause, la termine si elle tourne.
+$('#rec').click(function(){var e=etatCourant;
+  if(e.actif&&e.en_lecture){demander('Terminer la capture ?','Le fichier est clos et la fabrication des .mov démarre.','Terminer',function(){
+    $.post('/arreter',function(r){annoncer('Capture terminée : '+(r.fichier||''));listerCaptures()})});return}
+  if(e.actif){$.post('/capturer').fail(function(x){annoncer(x.responseJSON.erreur)});return}
+  var n=$.trim($('#numero').val());
+  if(!/^\d+$/.test(n)){annoncer('Inscris le numéro de la bande sur l\'étiquette de la cassette');$('#numero').focus();return}
+  $.post('/capturer',{nom:GABARIT+n,rembobiner:$('#rembobiner').is(':checked')?1:''},function(r){
+    annoncer(r.reprise?'Reprise de la bande '+n+' à '+r.reprise:'Capture de la bande '+n+' lancée')})
+   .fail(function(x){annoncer(x.responseJSON?x.responseJSON.erreur:'Capture refusée')})});
+
+// Son du direct : le navigateur ne joue du son qu'après un clic.
+$('#ecouter').click(function(){var a=document.getElementById('son');
+  if(a.paused){a.src='/son?'+Date.now();a.play();$(this).html('<i class="ti ti-headphones"></i>').css('color','var(--vfd)')}
+  else{a.pause();a.removeAttribute('src');a.load();$(this).html('<i class="ti ti-headphones-off"></i>').css('color','')}});
+
+$.getJSON('/reglages',function(r){$('#rembobiner').prop('checked',!!r.rembobiner)});
+$('#rembobiner').change(function(){$.post('/reglages',{rembobiner:this.checked?1:0})});
+suivre();setInterval(suivre,1000);listerCaptures();setInterval(listerCaptures,10000);
+// Paramètres : où stocker les captures, où ranger les .dv et les .mov.
+var explorateur={cible:null,chemin:null};
+function ouvrirParametres(){$('#param-erreur').text('');$('#explorateur').hide();
+  $.getJSON('/reglages',function(r){$('#param-dossier').val(r.dossier);$('#param-dv').val(r.dossier_dv);$('#param-mov').val(r.dossier_mov);
+    $('#parametres').css('display','flex')})}
+function explorer(chemin){$.getJSON('/parcourir',{chemin:chemin},function(r){explorateur.chemin=r.chemin;$('#explorateur-chemin').text(r.chemin);
+  var l=r.parent?['<li data-c="'+echapper(r.parent)+'"><i class="ti ti-arrow-up"></i>..</li>']:[];
+  r.dossiers.forEach(function(n){l.push('<li data-c="'+echapper((r.chemin==='/'?'':r.chemin)+'/'+n)+'"><i class="ti ti-folder"></i>'+echapper(n)+'</li>')});
+  $('#explorateur-liste').html(l.join(''))}).fail(function(x){$('#param-erreur').text((x.responseJSON||{}).erreur||'Dossier illisible')})}
+$('#bouton-parametres').click(ouvrirParametres);
+$('#parametres .parcourir').click(function(){explorateur.cible=$(this).data('cible');$('#param-erreur').text('');
+  $('#explorateur').show();explorer($('#'+explorateur.cible).val()||'/mnt')});
+$('#explorateur-liste').on('click','li',function(){explorer($(this).data('c'))});
+$('#explorateur-choisir').click(function(){$('#'+explorateur.cible).val(explorateur.chemin);$('#explorateur').hide()});
+$('#param-non').click(function(){$('#parametres').hide()});
+$('#param-oui').click(function(){var donnees={};
+  // Le dossier de capture ne change pas pendant une capture : on ne l'envoie que s'il a bougé.
+  $('#parametres input').each(function(){donnees[$(this).data('cle')]=$(this).val().trim()});
+  $.getJSON('/reglages',function(r){if(donnees.dossier===r.dossier)delete donnees.dossier;
+    $.post('/reglages',donnees,function(){$('#parametres').hide();annoncer('Emplacements enregistrés')})
+     .fail(function(x){$('#param-erreur').text((x.responseJSON||{}).erreur||'Enregistrement impossible')})})});
+</script>
+</body>
+</html>
