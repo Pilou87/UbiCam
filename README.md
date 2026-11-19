@@ -2,17 +2,6 @@
 
 Interface web qui pilote les caméras et magnétoscopes DV en FireWire. Elle capture chaque bande dans un fichier .dv par jour de prise de vue, puis fabrique les .mov lisibles sur ordinateur.
 
-## En images
-
-* **La façade** : l'écran DIRECT montre ce que lit la platine, avec son timecode ; l'écran CAPTURES rejoue les vidéos déjà faites. Les touches pilotent la bande en FireWire (AV/C), REC lance la capture.
-* Lors des captures, ne vous fiez pas au décalage du son : il est là juste pour information. Quand vous relirez une capture, le son sera synchronisé et parfait.
-
-![Façade d'UbiCam](images/facade.png)
-
-**Des images issues de bandes capturées** (DVCAM, 2001 et 2002), lues dans les .mov fabriqués par UbiCam :
-
-![Exemples de captures](images/captures.jpg)
-
 ## Soutenir le projet
 
 UbiCam est libre et gratuit. Si l'appli vous a permis de sauver vos bandes DV, vous pouvez participer aux frais par PayPal :
@@ -23,6 +12,17 @@ UbiCam est libre et gratuit. Si l'appli vous a permis de sauver vos bandes DV, v
 
 * M'acheter du café pour les longues soirées à faire des tests, la retraite ne fait pas tout.
 * Acheter le matériel qui permet de tester UbiCam avec d'autres lecteurs (caméscopes, platines DV / DVCAM / Digital8) et les câbles FireWire qui vont avec. Chaque appareil a ses particularités sur le bus (sortie à ouvrir, commandes refusées, fin de bande mal signalée) : on ne peut les corriger qu'en ayant l'appareil sous la main.
+
+## En images
+
+* **La façade** : l'écran DIRECT montre ce que lit la platine, avec son timecode ; l'écran CAPTURES rejoue les vidéos déjà faites. Les touches pilotent la bande en FireWire (AV/C), REC lance la capture.
+* Lors des captures, ne vous fiez pas au décalage du son : il est là juste pour information. Quand vous relirez une capture, le son sera synchronisé et parfait.
+
+![Façade d'UbiCam](images/facade.png)
+
+**Des images issues de bandes capturées** (DVCAM, 2001 et 2002), lues dans les .mov fabriqués par UbiCam :
+
+![Exemples de captures](images/captures.jpg)
 
 ## Installation actuelle
 
