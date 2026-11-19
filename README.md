@@ -4,7 +4,7 @@ Interface web qui pilote les caméras et magnétoscopes DV en FireWire. Elle cap
 
 ## Soutenir le projet
 
-UbiCam est libre et gratuit. Si l'appli vous a permis de sauver vos bandes DV, vous pouvez participer aux frais par PayPal :
+UbiCam est libre et gratuit. Si l'appli vous a permis de sauver vos bandes DV, vous pouvez contribuer à des améliorations :
 
 **[Faire une contribution PayPal](https://paypal.me/lcnetwork)**
 
