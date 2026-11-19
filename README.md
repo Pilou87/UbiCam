@@ -13,6 +13,17 @@ Interface web qui pilote les caméras et magnétoscopes DV en FireWire. Elle cap
 
 ![Exemples de captures](images/captures.jpg)
 
+## Soutenir le projet
+
+UbiCam est libre et gratuit. Si l'appli vous a permis de sauver vos bandes DV, vous pouvez participer aux frais par PayPal :
+
+**[Faire une contribution PayPal](https://paypal.me/lcnetwork)**
+
+À quoi sert la contribution :
+
+* M'acheter du café pour les longues soirées à faire des tests, la retraite ne fait pas tout.
+* Acheter le matériel qui permet de tester UbiCam avec d'autres lecteurs (caméscopes, platines DV / DVCAM / Digital8) et les câbles FireWire qui vont avec. Chaque appareil a ses particularités sur le bus (sortie à ouvrir, commandes refusées, fin de bande mal signalée) : on ne peut les corriger qu'en ayant l'appareil sous la main.
+
 ## Installation actuelle
 
 - Conteneur sur Proxmox.
@@ -65,19 +76,9 @@ Ne jamais redémarrer `dvweb` pendant une capture ou une fabrication de .mov : `
 - Bande sans date de prise de vue (Bande_117, montage sans date caméscope) : une date tapée en tête du nom (« 1996-06-30 - … ») sert aux images non datées, sinon la date du jour. Une vraie date lue plus loin la remplace.
 - Les .mov passent par un flux corrigé (octet stype remis à SD) : un passage abîmé ne divise plus le nombre d'images.
 
-## Soutenir le projet
+## Câbles FireWire
 
-UbiCam est libre et gratuit. Si l'appli vous a permis de sauver vos bandes DV, vous pouvez participer aux frais par PayPal :
-
-**[Faire une contribution PayPal](https://paypal.me/lcnetwork)**
-
-À quoi sert la contribution :
-
-* M'acheter du café pour les longues soirées à faire des tests, la retraite ne fait pas tout.
-
-* Acheter le matériel qui permet de tester UbiCam avec d'autres lecteurs (caméscopes, platines DV / DVCAM / Digital8) et les câbles FireWire qui vont avec. Chaque appareil a ses particularités sur le bus (sortie à ouvrir, commandes refusées, fin de bande mal signalée) : on ne peut les corriger qu'en ayant l'appareil sous la main.
-
-Deux exemples de câbles IEEE 1394 (FireWire / i.LINK) utiles pour ces essais :
+Deux exemples de câbles IEEE 1394 (FireWire / i.LINK) utiles pour les essais :
 
 | Câble | Côté ordinateur | Côté lecteur | Exemple d'usage |
 |---|---|---|---|
